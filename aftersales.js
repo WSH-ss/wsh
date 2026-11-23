@@ -16,7 +16,7 @@ const AfterSales = (() => {
   const seed = () => ({ role: 'customer', selectedOrder: 'ORD-1004', id: '', applications: [], notifications: [], messageSequence: 0,
     history: false, failDelivery: false, diagnosticId: '', legacyStage: 'idle' });
   let state = seed();
-  const tabs = { customer: '客户工作台', staff: '客服审核', policy: '政策问答', workbench: '知识维护',
+  const tabs = { customer: '客户工作台', staff: '客服审核', workbench: '知识维护',
     feedback: '知识反馈', lab: 'Skill 评测', diagnostics: '处理诊断', messages: '通知投递', legacy: '流程试验', account: '账号' };
   const selected = () => state.applications.find((item) => item.id === state.id);
   const orderFor = (item) => orders.find((order) => order.id === item.orderId);
@@ -106,7 +106,8 @@ const AfterSales = (() => {
     return work(UI.stack(card(title('提交售后申请'), text(order.product + ' · ' + order.type + ' · ' + order.status),
       row(...ownOrders.map((value) => b(value.id, 'choose-order', value.id))), submits),
       card(title('我的申请'), list(ownCases)), card(title('站内通知'), list(ownNotices))),
-    card(title('申请进度'), item ? UI.stack(applicationFact(item), additions, title('处理记录'), trace(item.audit)) : text('提交申请后可在这里查进度与补充材料。')));
+    UI.stack(card(title('申请进度'), item ? UI.stack(applicationFact(item), additions, title('处理记录'), trace(item.audit)) : text('提交申请后可在这里查进度与补充材料。')),
+      '<section id="policy-question" aria-label="政策问答">' + Knowledge.policy() + '</section>'));
   }
   function assistPanel(item) {
     const job = item.assist;

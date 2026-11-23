@@ -19,7 +19,7 @@
 |---|---|---|
 | 客户工作台 | 选择订单、取消/退货/质量申请、规则分流、修改或改办、补交凭证、补件回复、查看进度与通知 | `AfterSales.vue`、`CustomerApplicationController`、`CustomerRouter`、`AfterSalesPolicyEngine`、`NotificationController` |
 | 客服审核 | 领取、续租、退回、模拟租约过期、辅助任务成功/失败/取消/重试、补件、人工结案和历史 | `AfterSalesStaff.vue`、`StaffAssistPanel.vue`、`StaffReviewController`、`StaffAssistController` |
-| 政策问答 | 查询条款、查看引用原文、模拟检索及引用异常、检索拒答 | `PolicyQuestion.vue`、知识检索及回答控制器 |
+| 客户工作台内的政策问答 | 提交申请前查询办理条件、时限和凭证，查看引用原文，模拟检索及引用异常 | `PolicyQuestion.vue`、知识检索及回答控制器 |
 | 知识维护 | 导入多条款 Markdown、草稿审核、启动/重试/取消索引、发布、撤销和回滚 | `KnowledgeWorkbench.vue`、`KnowledgeIndexPanel.vue`、`KnowledgePublicationPanel.vue` |
 | 反馈和诊断 | 知识待办核实、解决、搁置，查看工单执行记录、查看投递失败并重放 | `KnowledgeFeedback.vue`、`AfterSalesDiagnostics.vue`、`MessageMaintenance.vue` |
 | Skill 评测 | 生成候选、执行固定样例对照、安全门禁拒绝、启用及回滚 | `AfterSalesLab.vue`、`EvolutionService` |

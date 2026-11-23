@@ -33,7 +33,8 @@ const Knowledge = (() => {
   const skillFor = (intent) => state.skills[{ RETURN_REFUND: 'return-refund', QUALITY_ISSUE: 'quality-triage', CANCEL_ORDER: 'cancel-order' }[intent]];
   function policy() {
     const answer = state.answer;
-    return work(card(title('政策问答'), text('可输入“定制刻字可以退货吗”“拉链损坏需要哪些凭证”或任意不相关的问题。'),
+    return UI.stack(card(title('政策问答'), text('提交申请前，可查询适用的办理条件、时限和所需材料。'),
+      text('例如：“定制刻字水杯签收 12 天后杯身开裂，还能申请质量售后吗？需要提供什么凭证？”'),
       form('ask-policy', field('政策问题', input('question', answer?.question, 'required maxlength="200"')) +
         field('商品范围', select('scope', [['standard', '标准商品'], ['custom', '定制商品'], ['all', '不限']], answer?.scope ?? 'all')) +
         field('场景', select('mode', [['ok', '正常检索'], ['retrieval', '模拟检索失败'], ['citation', '模拟引用校验失败']], answer?.mode ?? 'ok')), '查询政策'),
@@ -222,6 +223,6 @@ const Knowledge = (() => {
       state.candidates.push({ id: String(id), version: '1.0.' + id, fixture, baseline: state.skills[fixture.skill], state: '待评测', scored: false });
     },
   };
-  const renderers = { policy, workbench, feedback, lab };
-  return { actions, forms, render: (view) => renderers[view](), reset: () => { state = seed(); }, skillFor, policyCitation };
+  const renderers = { workbench, feedback, lab };
+  return { actions, forms, policy, render: (view) => renderers[view](), reset: () => { state = seed(); }, skillFor, policyCitation };
 })();

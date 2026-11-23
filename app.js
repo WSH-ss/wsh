@@ -6,10 +6,11 @@
     aftersales: { name: '电商售后 Agent', intro: '任选客户、客服或维护人员，体验一笔申请从分流到审核结案，也可以管理政策和 Skill。', app: AfterSales },
   };
   function route() {
-    const [key, requested] = location.hash.slice(1).split('/');
+    const [key, requested, section] = location.hash.slice(1).split('/');
     const project = projects[key];
-    const view = project && (Object.hasOwn(project.app.tabs, requested) ? requested : project.app.defaultView);
-    return { key, view, project };
+    const policyLink = key === 'aftersales' && (requested === 'policy' || (requested === 'customer' && section === 'policy'));
+    const view = project && (policyLink ? 'customer' : Object.hasOwn(project.app.tabs, requested) ? requested : project.app.defaultView);
+    return { key, view, project, policyLink };
   }
   function home() {
     return '<section class="hero"><h1>两个项目，直接上手</h1><p>任选一个工作台。所有账号、订单和政策均为合成样例，状态仅保留在当前标签页。</p></section>'
@@ -17,7 +18,7 @@
       + '<section class="card project-card"><h2>券序 · 本地生活</h2><p>搜店、写笔记、关注用户。领取秒杀券后可模拟支付，也可观察 Broker 停机和超时返库。</p>'
       + '<div class="row"><a class="button primary" href="#shoplink">打开券序</a><a class="button" href="#shoplink/vouchers">直接看优惠券</a></div></section>'
       + '<section class="card project-card"><h2>电商售后 Agent</h2><p>提交售后申请，切到客服处理工单，再到维护人员工作区验证政策发布、反馈和 Skill 评测。</p>'
-      + '<div class="row"><a class="button primary" href="#aftersales">打开售后工作台</a><a class="button" href="#aftersales/policy">直接查政策</a></div></section></div>';
+      + '<div class="row"><a class="button primary" href="#aftersales">打开售后工作台</a><a class="button" href="#aftersales/customer/policy">直接查政策</a></div></section></div>';
   }
   function notes() {
     return '<div class="section-title"><div><h1>技术复盘</h1><p>这些记录描述源码里的实现。演示台用合成样例重放业务状态。</p></div></div><div class="stack">'
@@ -59,6 +60,12 @@
     try {
       const message = await target(value, go, context);
       if (route().key !== key) return;
+      const policyPanel = app.querySelector('#policy-question');
+      if (policyPanel && ['ask-policy', 'policy-source'].includes(action)) {
+        policyPanel.innerHTML = Knowledge.policy();
+        notify(message);
+        return;
+      }
       if (next !== view) history.pushState(null, '', '#' + key + '/' + next);
       render(message);
     } catch (error) {
@@ -76,6 +83,10 @@
     event.preventDefault();
     run('forms', form.dataset.form, new FormData(form));
   });
-  window.addEventListener('hashchange', () => render());
-  render();
+  function renderRoute() {
+    render();
+    if (route().policyLink) app.querySelector('#policy-question')?.scrollIntoView({ block: 'start' });
+  }
+  window.addEventListener('hashchange', renderRoute);
+  renderRoute();
 })();
