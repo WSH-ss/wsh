@@ -2,6 +2,8 @@
 
 券序和电商售后 Agent 的浏览器交互演示。打开 `index.html` 可直接体验，也可将本目录发布到静态站点。页面仅使用合成账号、订单与政策。本标签页内切换身份时会保留业务状态，刷新或点击「重置此项目」可重新开始。
 
+[打开在线演示](https://wsh-ss.github.io/wsh/) · [券序源码](https://github.com/WSH-ss/shoplink) · [电商售后 Agent 源码](https://github.com/WSH-ss/aftersales-agent)
+
 ## 券序
 
 | 模块 | 可以操作 | 对照的项目实现 |

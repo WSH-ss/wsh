@@ -16,9 +16,11 @@
     return '<section class="hero"><h1>两个项目，直接上手</h1><p>任选一个工作台。所有账号、订单和政策均为合成样例，状态仅保留在当前标签页。</p></section>'
       + '<div class="project-cards">'
       + '<section class="card project-card"><h2>券序 · 本地生活</h2><p>搜店、写笔记、关注用户。领取秒杀券后可模拟支付，也可观察 Broker 停机和超时返库。</p>'
-      + '<div class="row"><a class="button primary" href="#shoplink">打开券序</a><a class="button" href="#shoplink/vouchers">直接看优惠券</a></div></section>'
+      + '<div class="row"><a class="button primary" href="#shoplink">打开券序</a><a class="button" href="#shoplink/vouchers">直接看优惠券</a>'
+      + '<a class="button" href="https://github.com/WSH-ss/shoplink" target="_blank" rel="noopener noreferrer">查看券序源码</a></div></section>'
       + '<section class="card project-card"><h2>电商售后 Agent</h2><p>提交售后申请，切到客服处理工单，再到维护人员工作区验证政策发布、反馈和 Skill 评测。</p>'
-      + '<div class="row"><a class="button primary" href="#aftersales">打开售后工作台</a><a class="button" href="#aftersales/customer/policy">直接查政策</a></div></section></div>';
+      + '<div class="row"><a class="button primary" href="#aftersales">打开售后工作台</a><a class="button" href="#aftersales/customer/policy">直接查政策</a>'
+      + '<a class="button" href="https://github.com/WSH-ss/aftersales-agent" target="_blank" rel="noopener noreferrer">查看售后源码</a></div></section></div>';
   }
   function notes() {
     return '<div class="section-title"><div><h1>技术复盘</h1><p>这些记录描述源码里的实现。演示台用合成样例重放业务状态。</p></div></div><div class="stack">'
