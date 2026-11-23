@@ -4,7 +4,7 @@ const AfterSales = (() => {
   const intents = { CANCEL_ORDER: '取消订单', RETURN_REFUND: '申请退货', QUALITY_ISSUE: '质量问题' };
   const statuses = { NEEDS_INFORMATION: '待客户补充', UNDER_REVIEW: '待人工审核', CLAIMED: '审核中', RETURN_PENDING: '待寄回商品', COMPLETED: '已完成', DECLINED: '暂不受理' };
   const routes = { RULE: '规则处理', INFORMATION: '补充信息', MANUAL_REVIEW: '人工审核', ASSISTED_REVIEW: '人工审核 · 可整理辅助材料' };
-  const orders = [
+  const sampleOrders = [
     { id: 'ORD-1001', owner: 'customer', product: '无线耳机', state: 'PAID', status: '已付款 · 未发货', type: '标准商品', days: 0, intent: 'CANCEL_ORDER' },
     { id: 'ORD-1002', owner: 'customer', product: '通勤背包', state: 'DELIVERED', status: '已签收', type: '标准商品', days: 3, intent: 'QUALITY_ISSUE' },
     { id: 'ORD-1003', owner: 'customer', product: '旅行水杯', state: 'SHIPPED', status: '已发货', type: '标准商品', days: 0, intent: 'RETURN_REFUND' },
@@ -13,13 +13,13 @@ const AfterSales = (() => {
     { id: 'ORD-1006', owner: 'customer', product: '便携水壶', state: 'DELIVERED', status: '已签收', type: '标准商品', days: 2, intent: 'RETURN_REFUND' },
     { id: 'ORD-2001', owner: 'customerB', product: '帆布双肩包', state: 'UNPAID', status: '未付款', type: '标准商品', days: 0, intent: 'CANCEL_ORDER' },
   ];
-  const seed = () => ({ role: 'customer', selectedOrder: 'ORD-1004', id: '', applications: [], notifications: [], messageSequence: 0,
+  const seed = () => ({ role: 'customer', selectedOrder: 'ORD-1004', id: '', orders: sampleOrders.map((order) => ({ ...order })), applications: [], notifications: [], messageSequence: 0,
     history: false, failDelivery: false, diagnosticId: '', legacyStage: 'idle' });
   let state = seed();
   const tabs = { customer: '客户工作台', staff: '客服审核', workbench: '知识维护',
     feedback: '知识反馈', lab: 'Skill 评测', diagnostics: '处理诊断', messages: '通知投递', legacy: '流程试验', account: '账号' };
   const selected = () => state.applications.find((item) => item.id === state.id);
-  const orderFor = (item) => orders.find((order) => order.id === item.orderId);
+  const orderFor = (item) => state.orders.find((order) => order.id === item.orderId);
   const customers = () => ['customer', 'customerB'].includes(state.role);
   const roleFor = { customer: 'customer', staff: 'staff', workbench: 'maintainer', feedback: 'maintainer', lab: 'maintainer',
     diagnostics: 'maintainer', messages: 'maintainer', legacy: 'customer' };
@@ -60,6 +60,7 @@ const AfterSales = (() => {
     if (/(仅退款|只退款|只退钱|开发票|补开发票|维修|补发|换货)/.test(reason))
       return manual('请等待客服核实该事项。', 'REQUEST_REQUIRES_REVIEW');
     if (order.state === 'UNPAID') return rule('DECLINED', '订单尚未付款，没有可退金额。', 'UNPAID_ORDER');
+    if (order.state === 'REFUNDED') return rule('DECLINED', '订单已完成退款，请勿重复申请。', 'ALREADY_REFUNDED');
     if (order.state === 'PAID') return rule('COMPLETED', '未发货订单已取消，已模拟退还实付金额。', 'PAID_NOT_SHIPPED');
     if (order.state === 'SHIPPED') return manual('商品已发货，客服需确认拦截或退货方案。', 'SHIPPED_REQUIRES_REVIEW');
     if (item.intent === 'QUALITY_ISSUE') {
@@ -74,6 +75,9 @@ const AfterSales = (() => {
   }
   function applyRoute(item, note) {
     Object.assign(item, classify(item));
+    if (item.code === 'PAID_NOT_SHIPPED') {
+      Object.assign(orderFor(item), { state: 'REFUNDED', status: '已退款' });
+    }
     audit(item, note); audit(item, routes[item.route] + ' · ' + item.code);
     notify(item, item.message);
   }
@@ -82,7 +86,7 @@ const AfterSales = (() => {
     text(item.reason || '未填写说明'), text('凭证：' + (item.evidence.join('、') || '未提供')), text(item.message));
   const confirmation = (label) => '<label class="row"><input type="checkbox" required name="confirmed" style="width:18px;min-height:18px">' + e(label) + '</label>';
   function customer() {
-    const ownOrders = orders.filter((order) => order.owner === state.role);
+    const ownOrders = state.orders.filter((order) => order.owner === state.role);
     const order = ownOrders.find((item) => item.id === state.selectedOrder) ?? ownOrders[0];
     const applications = state.applications.filter((item) => item.owner === state.role);
     const item = applications.find((value) => value.id === state.id);
@@ -183,6 +187,13 @@ const AfterSales = (() => {
   function transitionClaim(item, label, status) {
     item.version++; item.status = status; item.claimed = status === 'CLAIMED'; audit(item, label);
   }
+  function invalidateAssist(item) {
+    const job = item.assist;
+    if (job && ['运行中', '可重试'].includes(job.status)) {
+      job.status = '已失效';
+      job.log.push('审核状态已改变，旧任务不能回写。');
+    }
+  }
   const actions = {
     actor: (role, go) => {
       const [identity, preferred] = role.split('/');
@@ -200,7 +211,11 @@ const AfterSales = (() => {
     },
     claim: () => { const item = requireStaff(); check(item.status === 'UNDER_REVIEW', '当前无法领取。'); transitionClaim(item, '客服领取，建立领取租约。', 'CLAIMED'); },
     renew: () => { const item = requireStaff(true); transitionClaim(item, '客服延长领取租约。', 'CLAIMED'); },
-    release: () => { const item = requireStaff(true); transitionClaim(item, '客服退回队列。', 'UNDER_REVIEW'); },
+    release: () => {
+      const item = requireStaff(true);
+      transitionClaim(item, '客服退回队列。', 'UNDER_REVIEW');
+      invalidateAssist(item);
+    },
     'lease-expire': () => {
       const item = requireStaff(true); transitionClaim(item, '模拟租约到期，工单退回队列。', 'UNDER_REVIEW');
       if (item.assist?.status === '运行中') { item.assist.status = '可重试'; item.assist.log.push('校验租约失败，旧执行者的回写被拒绝。'); }
@@ -240,7 +255,7 @@ const AfterSales = (() => {
   };
   const forms = {
     application: (data) => {
-      requireRole('customer'); const order = orders.find((item) => item.owner === state.role && item.id === data.get('order'));
+      requireRole('customer'); const order = state.orders.find((item) => item.owner === state.role && item.id === data.get('order'));
       check(order && data.has('confirmed'), '请确认申请并选择本账号订单。');
       const intent = data.get('intent'); const reason = data.get('reason').trim(); const evidence = data.get('evidence').trim();
       const repeated = state.applications.find((item) => item.owner === state.role && item.orderId === order.id && item.intent === intent && item.originalReason === reason && item.originalEvidence === evidence);
@@ -261,7 +276,7 @@ const AfterSales = (() => {
     },
     'request-info': (data) => {
       const item = requireStaff(true); const question = data.get('question').trim(); check(question, '请填写补充要求。');
-      item.prompt = question; transitionClaim(item, '客服发出补充要求。', 'NEEDS_INFORMATION'); notify(item, '客服需要补充信息。'); return '已发送补充要求。';
+      item.prompt = question; transitionClaim(item, '客服发出补充要求。', 'NEEDS_INFORMATION'); invalidateAssist(item); notify(item, '客服需要补充信息。'); return '已发送补充要求。';
     },
     reply: (data) => {
       const item = requireCustomer(); const reason = data.get('reason').trim();
@@ -273,7 +288,7 @@ const AfterSales = (() => {
     resolve: (data) => {
       const item = requireStaff(true); const note = data.get('note').trim();
       check(note && data.has('confirmed'), '请填写并确认结案说明。');
-      item.resolved = true; item.message = note; transitionClaim(item, '客服提交结论 · ' + note, data.get('outcome'));
+      item.resolved = true; item.message = note; transitionClaim(item, '客服提交结论 · ' + note, data.get('outcome')); invalidateAssist(item);
       notify(item, note); return '人工结论已提交。';
     },
   };
@@ -283,6 +298,6 @@ const AfterSales = (() => {
     if (role && state.role !== role && !(role === 'customer' && customers())) return card(title(tabs[view]),
       text('请先切换到该工作区对应的演示身份。'), b('切换到' + roles[role], 'actor', role + '/' + view, { primary: true }));
     return renders[view] ? renders[view]() : Knowledge.render(view);
-  }, account: () => roles[state.role], canMaintain: () => requireRole('maintainer'),
+  }, account: () => roles[state.role], customerId: () => { requireRole('customer'); return state.role; }, canMaintain: () => requireRole('maintainer'),
   reset: () => { state = seed(); Knowledge.reset(); } };
 })();

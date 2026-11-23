@@ -7,7 +7,7 @@
   };
   function route() {
     const [key, requested, section] = location.hash.slice(1).split('/');
-    const project = projects[key];
+    const project = Object.hasOwn(projects, key) ? projects[key] : null;
     const policyLink = key === 'aftersales' && (requested === 'policy' || (requested === 'customer' && section === 'policy'));
     const view = project && (policyLink ? 'customer' : Object.hasOwn(project.app.tabs, requested) ? requested : project.app.defaultView);
     return { key, view, project, policyLink };

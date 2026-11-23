@@ -11,7 +11,7 @@ const Knowledge = (() => {
   const template = '## RETURN-001 退货条件\n标准商品签收后 7 天内可登记退货。客户寄回后，客服核实商品状态与凭证。';
   const seed = () => ({
     drafts: [], draftId: '', active: 'demo-v1', publications: [{ id: 'demo-v1', title: '原始基线', clauses: baseline, state: '有效' }], history: ['启用示例基线 demo-v1。'],
-    answer: null, feedback: [], feedbackId: '', filter: '', failures: [
+    answers: new Map(), feedback: [], feedbackId: '', filter: '', failures: [
       { id: 'F-01', label: '定制退货 · 未核实问题位置', skill: 'return-refund', accepted: 6, candidate: 8, safe: true },
       { id: 'F-02', label: '质量核验 · 候选缺少材料条件', skill: 'quality-triage', accepted: 7, candidate: 6, safe: true },
       { id: 'F-03', label: '取消订单 · 候选绕过确认', skill: 'cancel-order', accepted: 5, candidate: 9, safe: false },
@@ -32,7 +32,7 @@ const Knowledge = (() => {
   const confirmation = (label) => '<label class="row"><input name="confirmed" type="checkbox" required style="width:18px;min-height:18px">' + e(label) + '</label>';
   const skillFor = (intent) => state.skills[{ RETURN_REFUND: 'return-refund', QUALITY_ISSUE: 'quality-triage', CANCEL_ORDER: 'cancel-order' }[intent]];
   function policy() {
-    const answer = state.answer;
+    const answer = state.answers.get(AfterSales.customerId());
     return UI.stack(card(title('政策问答'), text('提交申请前，可查询适用的办理条件、时限和所需材料。'),
       text('例如：“定制刻字水杯签收 12 天后杯身开裂，还能申请质量售后吗？需要提供什么凭证？”'),
       form('ask-policy', field('政策问题', input('question', answer?.question, 'required maxlength="200"')) +
@@ -123,7 +123,10 @@ const Knowledge = (() => {
     return clauses;
   }
   const actions = {
-    'policy-source': () => { if (state.answer?.clause) state.answer.showSource = !state.answer.showSource; },
+    'policy-source': () => {
+      const answer = state.answers.get(AfterSales.customerId());
+      if (answer?.clause) answer.showSource = !answer.showSource;
+    },
     'open-draft': (id) => { checkRole(); state.draftId = id; },
     build: () => {
       checkRole(); const item = draft(); check(item?.state === '已审核' && !item.build, '请先审核草稿。');
@@ -141,11 +144,11 @@ const Knowledge = (() => {
     publish: () => {
       checkRole(); const item = draft(); check(item?.build === '完整' && !state.publications.some((value) => value.id === item.id), '必须使用未发布的完整索引。');
         state.publications.push({ id: item.id, title: item.title, clauses: item.clauses, state: '有效', scope: item.scope, start: item.start, end: item.end });
-      state.active = item.id; state.answer = null; state.history.push('发布 ' + item.id + '。'); return '发布成功，后续问答将使用此版本。';
+      state.active = item.id; state.answers.clear(); state.history.push('发布 ' + item.id + '。'); return '发布成功，后续问答将使用此版本。';
     },
     revoke: () => {
       checkRole(); const current = active(); check(current, '没有活动来源。');
-      current.state = '撤销'; state.active = ''; state.answer = null; state.history.push('撤销 ' + current.id + '，问答暂停。');
+      current.state = '撤销'; state.active = ''; state.answers.clear(); state.history.push('撤销 ' + current.id + '，问答暂停。');
       return '活动来源已撤销，请按需要回滚历史有效版本。';
     },
     'feedback-filter': (value) => { checkRole(); state.filter = value; },
@@ -167,10 +170,11 @@ const Knowledge = (() => {
   };
   const forms = {
     'ask-policy': (data) => {
+      const customer = AfterSales.customerId();
       const question = data.get('question').trim(), mode = data.get('mode'), scope = data.get('scope');
       check(question, '请输入政策问题。');
       const current = active();
-      const noAnswer = (status, message, steps) => { state.answer = { question, scope, mode, status, message, steps }; logFeedback(question, status); };
+      const noAnswer = (status, message, steps) => { state.answers.set(customer, { question, scope, mode, status, message, steps }); logFeedback(question, status); };
       if (!current) return noAnswer('无活动来源', '已暂停政策问答，请等待有效政策版本恢复。', ['找不到活动来源。']);
       if (!effective(current)) return noAnswer('来源未在有效期', '当前政策来源未在有效期内，请联系维护人员。', ['检查政策生效及失效日期。']);
       if (mode === 'retrieval') return noAnswer('技术故障', '检索暂不可用，请稍后再试。', ['活动版本 ' + current.id, '检索失败。']);
@@ -184,8 +188,8 @@ const Knowledge = (() => {
       const clause = current.clauses.find((item) => item.id === preferred) ?? current.clauses.find((item) => question.includes(item.id) || (item.heading.length >= 2 && question.includes(item.heading)));
       if (!clause) return noAnswer('候选依据不足', '未找到适用条款，请补充范围或转人工核查。', ['检索活动版本 ' + current.id, '无可用引用。']);
       if (mode === 'citation') return noAnswer('引用校验失败', '结果未通过引用检查，已停止生成回答。', ['检索命中 ' + clause.id, '校验条款原文失败。']);
-      state.answer = { question, scope, mode, status: '已找到政策依据', message: clause.quote, clause, source: current.id,
-        steps: ['在活动版本内查找候选条款。', '核对适用范围、条款编号和原文。'] };
+      state.answers.set(customer, { question, scope, mode, status: '已找到政策依据', message: clause.quote, clause, source: current.id,
+        steps: ['在活动版本内查找候选条款。', '核对适用范围、条款编号和原文。'] });
     },
     'add-draft': async (data) => {
       checkRole();
@@ -210,7 +214,7 @@ const Knowledge = (() => {
     rollback: (data) => {
       checkRole(); const id = data.get('version');
       check(data.has('confirmed') && state.publications.some((item) => item.id === id && item.state === '有效'), '请选择仍然有效的历史版本。');
-      state.active = id; state.answer = null; state.history.push('回滚到 ' + id + '。');
+      state.active = id; state.answers.clear(); state.history.push('回滚到 ' + id + '。');
     },
     'review-feedback': (data) => {
       checkRole(); const item = state.feedback.find((value) => value.id === state.feedbackId);
