@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="王绍衡的后端项目演示。在线体验券序抢购和电商售后 Agent，查看系统设计与验证记录。">
+  <title>项目演示台 · 王绍衡</title>
+  <style>
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  color: #202528;
+  background: #f7f8f5;
+  font-size: 16px;
+  --ink: #202528;
+  --muted: #545b5e;
+  --line: #dfe4dd;
+  --forest: #123932;
+  --green: #21634e;
+  --blue: #293e89;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+a { color: inherit; }
+a:focus-visible, button:focus-visible, select:focus-visible, summary:focus-visible {
+  outline: 3px solid #557ad9;
+  outline-offset: 4px;
+}
+.frame { width: min(1120px, calc(100% - 48px)); margin-inline: auto; }
+.top { border-bottom: 1px solid var(--line); background: #fff; }
+.top-inner, .section-head, .actions, .sources { display: flex; align-items: center; }
+.top-inner { justify-content: space-between; min-height: 69px; gap: 20px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; }
+.mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--forest); color: white; }
+nav { display: flex; gap: clamp(12px, 3vw, 28px); }
+nav a { text-decoration: none; color: var(--muted); font-weight: 600; font-size: .875rem; }
+nav a:hover, .quiet:hover { color: var(--green); }
+.intro {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  align-items: center;
+  gap: 40px;
+  margin-block: 42px 48px;
+  padding: clamp(28px, 5.6vw, 68px);
+  border-radius: 28px;
+  color: #fff;
+  background: radial-gradient(ellipse at 80% 5%, #236451, transparent 67%), #133931;
+}
+h1, h2, h3, p { margin-block-start: 0; }
+h1 { font-size: clamp(2.3rem, 5.2vw, 4rem); line-height: 1.12; letter-spacing: -.055em; margin-block-end: 20px; }
+.intro p { color: #dbece2; line-height: 1.75; max-width: 29em; margin: 0; }
+.cover { display: grid; gap: 13px; }
+.project-link {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 19px;
+  min-height: 94px;
+  border-radius: 15px;
+  color: var(--ink);
+  text-decoration: none;
+  background: #f9faf6;
+  transition: background-color .18s;
+}
+.project-link:hover { background: #ecf5e3; }
+.project-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 49px;
+  height: 49px;
+  border-radius: 13px;
+  font-weight: 700;
+  font-size: 1.35rem;
+}
+.shop-link .project-icon, .shop-label { background: #e3eed9; color: #255638; }
+.agent-link .project-icon, .agent-label { background: #e8ecff; color: var(--blue); }
+.project-link strong, .project-link small { display: block; }
+.project-link strong { font-size: 1.13rem; }
+.project-link small { color: var(--muted); line-height: 1.45; margin-top: 4px; font-size: .875rem; }
+.project, .notes, .sources { margin-bottom: 44px; scroll-margin-top: 22px; }
+.section-head, .sources { justify-content: space-between; gap: 16px; }
+.section-head { margin-bottom: 18px; align-items: end; }
+h2 { font-size: clamp(1.5rem, 3.5vw, 2.05rem); line-height: 1.22; letter-spacing: -.035em; margin-bottom: 10px; }
+.label {
+  display: inline-block;
+  border-radius: 7px;
+  font-size: .875rem;
+  padding: 4px 9px;
+  font-weight: 650;
+  margin-bottom: 10px;
+}
+.demo-label { color: var(--muted); font-size: .875rem; white-space: nowrap; }
+.section-head p, .sources p { margin: 0; color: var(--muted); line-height: 1.6; }
+.console, .note-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.console-main, .console-side, details, .sources {
+  min-width: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: clamp(16px, 3vw, 27px);
+}
+.console-side { background: #f1f5ee; }
+h3 { font-size: 1.15rem; margin-bottom: 12px; }
+label { display: block; font-weight: 650; margin-bottom: 7px; }
+select {
+  font: inherit;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid #bac7bb;
+  border-radius: 8px;
+  padding: 9px 12px;
+  width: 100%;
+}
+.ticket, .case-info { padding: 17px 18px; border-radius: 12px; margin-block: 16px; }
+.ticket {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #f0f5e9;
+  border: 1px dashed #9fb49a;
+}
+.ticket p, .case-info p { margin: 0; }
+.ticket .ticket-shop { color: var(--muted); font-size: .875rem; margin-bottom: 5px; }
+.ticket h3 { margin: 0 0 5px; }
+.ticket-price { text-align: right; }
+.ticket-price strong, .ticket-price del { display: block; white-space: nowrap; }
+.ticket-price strong { color: #2d623f; font-size: 1.75rem; }
+.ticket-price del { color: var(--muted); font-size: .875rem; }
+.actions { align-items: stretch; gap: 8px; flex-wrap: wrap; }
+button, .source-links a {
+  color: var(--ink);
+  padding: 8px 12px;
+  border: 1px solid #c0c9bf;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  font-size: .875rem;
+  min-height: 40px;
+}
+button:hover:not(:disabled), .source-links a:hover { background: #edf3e9; }
+button.primary { background: var(--green); color: white; border-color: var(--green); }
+button.primary:hover:not(:disabled) { background: #154b3a; }
+button.agent-primary { background: var(--blue); border-color: var(--blue); }
+button.agent-primary:hover:not(:disabled) { background: #1c2d71; }
+button.quiet { border-color: transparent; }
+button:disabled { color: #707774; background: #f4f5f3; border-color: #dce1da; cursor: default; }
+.console-side p, .status-line, details p { line-height: 1.65; color: var(--muted); }
+.status-line { margin-block: 12px 0; }
+.timeline { margin: 10px 0 0; padding-left: 24px; }
+.timeline li { padding-left: 3px; margin-block: 8px; line-height: 1.5; }
+.case-info { background: #f1f3fc; }
+.case-info p { line-height: 1.6; margin-top: 7px; }
+.case-side { background: #f2f4fc; }
+.report { border-top: 1px solid #d6dcf3; padding-top: 11px; margin-top: 11px; }
+.report h4 { margin: 0 0 6px; }
+.report p { margin: 0 0 7px; }
+.report ul { margin: 0; padding-left: 22px; line-height: 1.5; }
+.report q { display: block; line-height: 1.55; border-left: 3px solid #adb8eb; padding-left: 11px; margin-block: 9px; }
+summary { font-weight: 700; cursor: pointer; line-height: 1.6; }
+details p { margin-block: 12px 0; }
+.evidence { background: #f2f5ef; border-radius: 8px; padding: 10px 13px; }
+.source-links { display: flex; gap: 9px; flex-wrap: wrap; }
+.source-links a { text-decoration: none; }
+.footer { border-top: 1px solid var(--line); padding-block: 21px 32px; color: var(--muted); font-size: .875rem; }
+@media (max-width: 760px) {
+  .frame { width: min(100% - 28px, 650px); }
+  .top-inner { flex-wrap: wrap; padding-block: 12px; gap: 9px 16px; }
+  .intro { grid-template-columns: 1fr; gap: 23px; margin-block: 21px 34px; }
+  .console, .note-grid { grid-template-columns: 1fr; }
+  .section-head, .sources { align-items: flex-start; flex-direction: column; gap: 6px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+
+</style>
+  
+</head>
+<body>
+  <header class="top">
+    <div class="frame top-inner">
+      <a class="brand" href="./index.html"><span class="mark" aria-hidden="true">王</span>项目演示台</a>
+      <nav aria-label="站点导航">
+        <a href="#shoplink">券序</a>
+        <a href="#aftersales">售后 Agent</a>
+        <a href="#notes">技术复盘</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="frame">
+    <section class="intro" aria-labelledby="welcome">
+      <div class="intro-text">
+        <h1 id="welcome">王绍衡的<br>后端项目演示台</h1>
+        <p>从确认一张券的库存，到核查一笔售后申请。两个项目都可以免登录上手。</p>
+      </div>
+      <div class="cover" aria-label="选择要体验的项目">
+        <a class="project-link shop-link" href="#shoplink">
+          <span class="project-icon" aria-hidden="true">券</span>
+          <span><strong>体验券序抢购</strong><small>预占库存、异步建单、取消后重买</small></span>
+        </a>
+        <a class="project-link agent-link" href="#aftersales">
+          <span class="project-icon" aria-hidden="true">审</span>
+          <span><strong>体验电商售后 Agent</strong><small>同一笔工单，对照规则与 Agent 辅助</small></span>
+        </a>
+      </div>
+    </section>
+
+    <section class="project" id="shoplink" aria-labelledby="shop-title">
+      <div class="section-head">
+        <div>
+          <span class="label shop-label">库存与订单</span>
+          <h2 id="shop-title">券序 · 本地生活服务平台</h2>
+          <p>选一家店，试一次抢购。建单后可模拟支付，或取消订单查看库存释放。</p>
+        </div>
+        <span class="demo-label">浏览器模拟</span>
+      </div>
+      <div class="console">
+        <div class="console-main">
+          <label for="merchant">选择店铺</label>
+          <select id="merchant">
+            <option value="coffee">北巷咖啡 · 国贸</option>
+            <option value="climb">岩点攀岩 · 三里屯</option>
+            <option value="noodles">松石面馆 · 五道口</option>
+          </select>
+          <div class="ticket" id="voucher">
+            <div><p class="ticket-shop" id="shop-name"></p><h3 id="voucher-name"></h3><p id="voucher-stock"></p></div>
+            <div class="ticket-price"><strong id="voucher-price"></strong><del id="voucher-list-price"></del></div>
+          </div>
+          <div class="actions">
+            <button class="primary" id="order" type="button">抢购优惠券</button>
+            <button id="pay" type="button" disabled>模拟支付</button>
+            <button id="cancel" type="button" disabled>取消订单</button>
+            <button class="quiet" id="reset" type="button">重置店铺</button>
+          </div>
+        </div>
+        <aside class="console-side" aria-labelledby="order-title">
+          <h3 id="order-title">订单进度</h3>
+          <p id="order-status" role="status">提交后，可在这里查看订单如何生成。</p>
+          <ol class="timeline" id="order-log"></ol>
+        </aside>
+      </div>
+    </section>
+
+    <section class="project" id="aftersales" aria-labelledby="agent-title">
+      <div class="section-head">
+        <div>
+          <span class="label agent-label">规则分流与审核辅助</span>
+          <h2 id="agent-title">电商售后 Agent</h2>
+          <p>选择一条样例并提交工单，查看 Java 规则的分流结果与预置辅助报告。</p>
+        </div>
+        <span class="demo-label">浏览器模拟 · 预置报告</span>
+      </div>
+      <div class="console">
+        <div class="console-main">
+          <label for="case">选择售后案例</label>
+          <select id="case">
+            <option value="custom">定制商品刻字疑似有误</option>
+            <option value="faulty">签收后发现拉链损坏</option>
+          </select>
+          <div class="case-info">
+            <strong id="case-order"></strong>
+            <p id="case-text"></p>
+          </div>
+          <div class="actions">
+            <button class="primary agent-primary" id="submit-case" type="button">提交售后申请</button>
+            <button id="compare" type="button" disabled>查看 Agent 辅助</button>
+          </div>
+          <p class="status-line" id="case-status" role="status">等待提交</p>
+        </div>
+        <aside class="console-side case-side" aria-labelledby="report-title">
+          <h3 id="report-title">审核对照</h3>
+          <div id="reports">
+            <p>提交后先查看规则分流，再打开 Agent 辅助，比较两者提供的信息。</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="notes" id="notes" aria-labelledby="notes-title">
+      <h2 id="notes-title">技术复盘</h2>
+      <div class="note-grid">
+        <details id="order-note">
+          <summary>券序如何在消息不可用时恢复建单</summary>
+          <p>应用先将下单意图写入 MySQL，再用 Redis Lua 按订单标识预占库存。消费者在同一事务内建单和条件扣减 MySQL 库存。消息发送与数据库恢复分别调度，避免把恢复进度绑在 Broker 上。</p>
+          <p>超时关单由延迟消息触发，数据库按截止时间和主键补扫。关单事务登记库存释放任务，Redis 按原订单标识幂等释放。生成列唯一索引限制同一客户同一券的有效订单，取消记录可以保留。</p>
+          <p class="evidence">本机实验中，Broker 停止约 5 分钟期间受理的 12 笔请求，在 Broker 重启前由恢复任务建单，停写后 Redis 和 MySQL 库存一致。</p>
+        </details>
+        <details id="agent-note">
+          <summary>规则已能分流，Agent 还能帮客服做什么</summary>
+          <p>规则根据订单状态和申请类型确定处理路径。人工复核时，Agent 整理订单事实、客户陈述、政策原文和待核查事项。客服核实材料后提交结论，工单状态由业务服务更新。</p>
+          <p>模型调用在数据库事务外执行。执行器回写前校验任务状态、租约与令牌，避免过期执行者覆盖新结果。报告还会核对政策引用是否来自本次检索，以及原文是否一致。</p>
+          <p class="evidence">基于 Olist 公开评论改写的 40 条留出案例，两版离线回放的合格报告由 28 条增至 32 条。其中 7 条新达标，3 条退步。</p>
+        </details>
+      </div>
+    </section>
+    <section class="sources" id="sources" aria-labelledby="source-title">
+      <div>
+        <h2 id="source-title">GitHub 源码</h2>
+        <p id="source-status">两个仓库在整理中。公开后会在这里链接到 README 和核心实现。</p>
+      </div>
+      <div class="source-links" id="source-links"></div>
+    </section>
+  </main>
+  <footer class="frame footer">王绍衡 <span aria-hidden="true">·</span> 券序与电商售后 Agent</footer>
+<script>
+const byId = (id) => document.getElementById(id);
+
+const shops = {
+  coffee: { name: '北巷咖啡 · 国贸', voucher: '双人咖啡套餐', price: '29.90', original: '58.00', stock: 8 },
+  climb: { name: '岩点攀岩 · 三里屯', voucher: '单人攀岩体验券', price: '49.90', original: '98.00', stock: 5 },
+  noodles: { name: '松石面馆 · 五道口', voucher: '招牌双人面食套餐', price: '39.90', original: '72.00', stock: 6 },
+};
+
+const merchant = byId('merchant');
+const orderButton = byId('order');
+const payButton = byId('pay');
+const cancelButton = byId('cancel');
+const orderLog = byId('order-log');
+const orderStatus = byId('order-status');
+const orderStates = {
+  empty: '提交后，可在这里查看订单如何生成。',
+  queued: '抢购已受理，订单建单中。',
+  unpaid: '订单待支付，可以支付或取消。',
+  cancelled: '订单已取消，库存已释放。你可以再次抢购。',
+  paid: '模拟支付成功，本次抢购完成。',
+};
+const orders = new Map();
+let orderCount = 0;
+
+function activeShop() {
+  const key = merchant.value;
+  if (!orders.has(key)) {
+    orders.set(key, { status: 'empty', stock: shops[key].stock, log: [], timer: null });
+  }
+  return orders.get(key);
+}
+
+function buildText(tag, value) {
+  const node = document.createElement(tag);
+  node.textContent = value;
+  return node;
+}
+
+function showVoucher() {
+  const shop = shops[merchant.value];
+  const state = activeShop();
+  byId('shop-name').textContent = shop.name;
+  byId('voucher-name').textContent = shop.voucher;
+  byId('voucher-stock').textContent = '剩余 ' + state.stock + ' 份';
+  byId('voucher-price').textContent = '¥' + shop.price;
+  byId('voucher-list-price').textContent = '¥' + shop.original;
+  orderStatus.textContent = orderStates[state.status];
+  orderButton.disabled = state.stock < 1 || !['empty', 'cancelled'].includes(state.status);
+  payButton.disabled = state.status !== 'unpaid';
+  cancelButton.disabled = state.status !== 'unpaid';
+  orderLog.replaceChildren(...state.log.map((event) => buildText('li', event)));
+}
+
+merchant.addEventListener('change', showVoucher);
+orderButton.addEventListener('click', () => {
+  const state = activeShop();
+  if (!['empty', 'cancelled'].includes(state.status) || state.stock < 1) return;
+
+  const key = merchant.value;
+  const orderNumber = 'SL-DEMO-' + String(++orderCount).padStart(3, '0');
+  state.stock--;
+  state.status = 'queued';
+  state.log = [
+    'MySQL 记录下单意图 ' + orderNumber,
+    'Redis Lua 按订单预占 1 份库存',
+    'RocketMQ 等待异步建单',
+  ];
+  showVoucher();
+
+  state.timer = setTimeout(() => {
+    state.status = 'unpaid';
+    state.log.push('MySQL 建单并扣减库存，等待支付');
+    state.timer = null;
+    if (merchant.value === key) showVoucher();
+  }, 550);
+});
+
+payButton.addEventListener('click', () => {
+  const state = activeShop();
+  if (state.status !== 'unpaid') return;
+  state.status = 'paid';
+  state.log.push('订单状态更新为已支付');
+  showVoucher();
+});
+
+cancelButton.addEventListener('click', () => {
+  const state = activeShop();
+  if (state.status !== 'unpaid') return;
+  state.status = 'cancelled';
+  state.stock++;
+  state.log.push('MySQL 关闭订单并登记库存释放任务', 'Redis 按原订单标识释放 1 份库存');
+  showVoucher();
+});
+
+byId('reset').addEventListener('click', () => {
+  clearTimeout(activeShop().timer);
+  orders.delete(merchant.value);
+  showVoucher();
+});
+
+const cases = {
+  custom: {
+    order: 'ORD-1004 · 已签收 · 定制商品 · 退货申请',
+    statement: '客户说：“不想要了，刻字不对。” 当前未提供凭证。',
+    reason: 'CUSTOM_PRODUCT_REVIEW · 定制商品需人工确认适用条件。',
+    policy: 'RETURN-EXCEPTION · 定制商品',
+    quote: '定制商品的无理由退货申请由人工确认适用条件；商品质量问题仍走 QUALITY-001，不直接依据定制属性拒绝。',
+    checks: ['对照订单上的定制内容，确认客户当时要求刻什么。', '请客户补充实物刻字照片或相应凭证编号。', '区分改变购买意愿与实际刻字有误，再人工判断适用政策。'],
+  },
+  faulty: {
+    order: 'ORD-1005 · 签收后第 2 天 · 质量问题',
+    statement: '客户说：“包刚拿到，拉链一拉就掉了。” 已提供凭证编号 EVD-042。',
+    reason: 'QUALITY_EVIDENCE_REVIEW · 凭证已收集，转人工审核，暂不执行退款。',
+    policy: 'QUALITY-001 · 质量问题核验',
+    quote: '签收后 30×24 小时以内的质量问题，没有凭证时要求补充凭证；收到凭证后转交人工审核，不直接退款。',
+    checks: ['核对 EVD-042 是否对应订单商品及所述拉链部位。', '确认异常是签收时发现，还是开始使用后出现。', '区分已有凭证编号和凭证内容已经核实这两个状态。'],
+  },
+};
+
+const casePicker = byId('case');
+const submitCase = byId('submit-case');
+const compare = byId('compare');
+const caseStatus = byId('case-status');
+const reports = byId('reports');
+
+function selectCase() {
+  const item = cases[casePicker.value];
+  byId('case-order').textContent = item.order;
+  byId('case-text').textContent = item.statement;
+  caseStatus.textContent = '等待提交';
+  submitCase.disabled = false;
+  compare.disabled = true;
+  reports.replaceChildren(buildText('p', '提交后先查看规则分流，再打开 Agent 辅助，比较两者提供的信息。'));
+}
+
+function reportSection(title) {
+  const section = document.createElement('section');
+  section.className = 'report';
+  section.append(buildText('h4', title));
+  return section;
+}
+
+submitCase.addEventListener('click', () => {
+  const rule = reportSection('Java 规则 · 转人工审核');
+  rule.append(buildText('p', cases[casePicker.value].reason));
+  reports.replaceChildren(rule);
+  caseStatus.textContent = '工单已受理，等待人工审核。';
+  submitCase.disabled = true;
+  compare.disabled = false;
+});
+
+compare.addEventListener('click', () => {
+  const item = cases[casePicker.value];
+  const report = reportSection('只读 Agent · 给客服核对的材料');
+  const checks = document.createElement('ul');
+  checks.append(...item.checks.map((check) => buildText('li', check)));
+  report.append(buildText('p', item.policy + ' · demo-v1'), buildText('q', item.quote), checks);
+  reports.append(report);
+  caseStatus.textContent = '已显示预置辅助报告，工单仍等待人工审核。';
+  compare.disabled = true;
+});
+
+casePicker.addEventListener('change', selectCase);
+showVoucher();
+selectCase();
+
+</script>
+</body>
+</html>
